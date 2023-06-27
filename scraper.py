@@ -1,5 +1,6 @@
 import os
 import time
+from pathlib import Path
 
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.remote.webelement import WebElement
@@ -7,10 +8,10 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.action_chains import ActionChains
 
 # URL = "https://www.aloyoga.com/collections/yoga-mats"
 URL = "https://www.aloyoga.com/collections/yoga-gear?ProductType=Accessories%3AEquipment%3ATowel"
+OUTPUT_PATH = Path("./output.txt")
 
 #setup chrome options
 chrome_options = Options()
@@ -54,6 +55,7 @@ def check_modal(driver:webdriver.Chrome):
 
 
 
+data = ""
 for idx, product in enumerate(products[:1]):
     # get the first product
     info_div = product.find_element(by=By.CLASS_NAME, value="info")
@@ -90,10 +92,18 @@ for idx, product in enumerate(products[:1]):
             for review_div in review_divs:
                 # parse review content
                 review_main = review_div.find_element(by=By.CLASS_NAME, value="yotpo-main ")
+                review_header = review_div.find_element(by=By.CLASS_NAME, value="yotpo-header")
+                review_header_element = review_header.find_elements(by=By.CLASS_NAME, value="yotpo-header-element")[1]
+                review_stars_div= review_header.find_element(by=By.CSS_SELECTOR, value="div.yotpo-review-stars")
+                review_stars = review_stars_div.find_elements(by=By.CLASS_NAME, value="yotpo-icon-star")
+                n_stars = len(review_stars)
+
                 review_main_content_div = review_main.find_element(by=By.CLASS_NAME, value="yotpo-review-wrapper")
                 review_content = review_main_content_div.find_element(by=By.CLASS_NAME, value="content-review")
                 review_content = review_content.text
-                print(review_content)
+                review_data = f"{n_stars}\t{review_content}\n"
+                data += review_data
+                print(review_data)
                 # review_footer = review_div.find_element(by=By.CLASS_NAME, value="yotpo-footer ")
 
             # update prev and active so we can know when to stop
@@ -120,7 +130,8 @@ for idx, product in enumerate(products[:1]):
         print("finished :)")
 
 
-
+with open(OUTPUT_PATH, "w") as f:
+    f.write(data)
     
 
 
